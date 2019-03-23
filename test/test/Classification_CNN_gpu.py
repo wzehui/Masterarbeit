@@ -51,7 +51,7 @@ train_loader = Data.DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffl
 test_data = torchvision.datasets.MNIST(root='./mnist/', train=False)
 test_x = Variable(torch.unsqueeze(test_data.test_data, dim=1)).type(torch.FloatTensor)[:2000].cuda()/255.
 # shape from (2000, 28, 28) to (2000, 1, 28, 28), value in range(0,1)
-test_y = test_data.test_labels[:2000].cude()
+test_y = test_data.test_labels[:2000].cuda()
 
 class CNN(nn.Module):
     def __init__(self):
