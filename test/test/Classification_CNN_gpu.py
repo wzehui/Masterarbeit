@@ -6,6 +6,12 @@ import torchvision
 import matplotlib.pyplot as plt
 # matplotlib inline
 
+import time
+
+
+time_start=time.time()
+
+
 torch.manual_seed(1)    # reproducible
 
 # Hyper Parameters
@@ -79,7 +85,8 @@ class CNN(nn.Module):
         output = self.out(x)
         return output, x    # return x for visualization
 
-cnn = CNN().cuda()
+cnn = CNN()
+cnn.cuda()
 # print(cnn)  # net architecture
 
 
@@ -104,8 +111,8 @@ loss_func = nn.CrossEntropyLoss()                       # the target label is no
 for epoch in range(EPOCH):
     for step, (x, y) in enumerate(train_loader):
         # gives batch data, normalize x when iterate train_loader
-        b_x = Variable(x)   # batch x
-        b_y = Variable(y)   # batch y
+        b_x = Variable(x).cuda()   # batch x
+        b_y = Variable(y).cuda()   # batch y
 
         output = cnn(b_x)[0]               # cnn output
         loss = loss_func(output, b_y)   # cross entropy loss
@@ -115,17 +122,17 @@ for epoch in range(EPOCH):
 
         if step % 100 == 0:
             test_output, last_layer = cnn(test_x)
-            pred_y = torch.max(test_output, 1)[1].data.squeeze()
+            pred_y = torch.max(test_output, 1)[1].cpu().data.squeeze()
             accuracy = (pred_y == test_y).sum().item() / float(test_y.size(0))
             print('Epoch: ', epoch, '| train loss: %.4f' % loss.data,
                   '| test accuracy: %.4f' % accuracy)
-            if HAS_SK:
+            # if HAS_SK:
                 # Visualization of trained flatten layer (T-SNE)
-                tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
-                plot_only = 500
-                low_dim_embs = tsne.fit_transform(last_layer.data.numpy()[:plot_only, :])
-                labels = test_y.numpy()[:plot_only]
-                plot_with_labels(low_dim_embs, labels)
+                # tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
+                # plot_only = 500
+                # low_dim_embs = tsne.fit_transform(last_layer.data.numpy()[:plot_only, :])
+                # labels = test_y.numpy()[:plot_only]
+                # plot_with_labels(low_dim_embs, labels)
 # plt.ioff()
 
 
@@ -134,3 +141,6 @@ test_output, _ = cnn(test_x[:10])
 pred_y = torch.max(test_output, 1)[1].data.numpy().squeeze()
 print(pred_y, 'prediction number')
 print(test_y[:10].numpy(), 'real number')
+
+time_end=time.time()
+print('time cost',time_end-time_start,'s')

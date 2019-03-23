@@ -5,6 +5,9 @@ import torch.utils.data as Data
 import torchvision
 import matplotlib.pyplot as plt
 # matplotlib inline
+import time
+
+time_start=time.time()
 
 torch.manual_seed(1)    # reproducible
 
@@ -119,13 +122,13 @@ for epoch in range(EPOCH):
             accuracy = (pred_y == test_y).sum().item() / float(test_y.size(0))
             print('Epoch: ', epoch, '| train loss: %.4f' % loss.data,
                   '| test accuracy: %.4f' % accuracy)
-            if HAS_SK:
-                # Visualization of trained flatten layer (T-SNE)
-                tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
-                plot_only = 500
-                low_dim_embs = tsne.fit_transform(last_layer.data.numpy()[:plot_only, :])
-                labels = test_y.numpy()[:plot_only]
-                plot_with_labels(low_dim_embs, labels)
+            # if HAS_SK:
+            #     Visualization of trained flatten layer (T-SNE)
+                # tsne = TSNE(perplexity=30, n_components=2, init='pca', n_iter=5000)
+                # plot_only = 500
+                # low_dim_embs = tsne.fit_transform(last_layer.data.numpy()[:plot_only, :])
+                # labels = test_y.numpy()[:plot_only]
+                # plot_with_labels(low_dim_embs, labels)
 # plt.ioff()
 
 
@@ -134,3 +137,6 @@ test_output, _ = cnn(test_x[:10])
 pred_y = torch.max(test_output, 1)[1].data.numpy().squeeze()
 print(pred_y, 'prediction number')
 print(test_y[:10].numpy(), 'real number')
+
+time_end=time.time()
+print('time cost',time_end-time_start,'s')
