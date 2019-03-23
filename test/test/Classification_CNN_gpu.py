@@ -123,7 +123,7 @@ for epoch in range(EPOCH):
         if step % 100 == 0:
             test_output, last_layer = cnn(test_x)
             pred_y = torch.max(test_output, 1)[1].cpu().data.squeeze()
-            accuracy = (pred_y == test_y).sum().item() / float(test_y.size(0))
+            accuracy = (pred_y == test_y.cpu()).sum().item() / float(test_y.cpu().size(0))
             print('Epoch: ', epoch, '| train loss: %.4f' % loss.data,
                   '| test accuracy: %.4f' % accuracy)
             # if HAS_SK:
@@ -138,9 +138,9 @@ for epoch in range(EPOCH):
 
 # print 10 predictions from test data
 test_output, _ = cnn(test_x[:10])
-pred_y = torch.max(test_output, 1)[1].data.numpy().squeeze()
+pred_y = torch.max(test_output, 1)[1].cpu().data.numpy().squeeze()
 print(pred_y, 'prediction number')
-print(test_y[:10].numpy(), 'real number')
+print(test_y[:10].cpu().numpy(), 'real number')
 
 time_end=time.time()
 print('time cost',time_end-time_start,'s')
