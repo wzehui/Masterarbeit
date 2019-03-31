@@ -1,0 +1,8 @@
+# Dataset
+CsvPath : '/Users/wzehui/Documents/MA/Daten/index/index.csv'
+FilePath : '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/'
+TrainRate : 0.9
+TestRate : 0.1
+
+# Training
+BatchSize : 128

@@ -1,50 +1,40 @@
+import re
+import os
+import pandas as pd
 import torch
-import torch.optim as optim
-from torch import nn
-import matplotlib.pyplot as plt
-# print(torch.__version__)
+import torchaudio
+import pandas as pd
+import os
 
-torch.manual_seed(1)    # reproducible
+path = '/Users/wzehui/Documents/MA/Daten/quellcode/13230.mp3'
 
-pi = 3.14
-omega = 1 * pi
-phi = 0.5 * pi
-A = 3
-n = torch.unsqueeze(torch.linspace(1, 10, 100), dim=1)  # x data (tensor), shape=(100, 1)
+class PreprocessData(object):
+    def __init__(self, path):
+        self.path = path
+        self.mixer = torchaudio.transforms.DownmixMono() #UrbanSound8K uses two channels, this will convert them to one
 
-x_c = A * torch.sin(omega * n + phi)
-x_u = A * torch.sin(omega * n + phi) + 0.5 * torch.randn(n.size())
-# plt.plot(n.squeeze().numpy(), x_u.squeeze().numpy(), '.')
-# plt.show()
+    def __getitem__(self, index):
+        #format the file path and load the file
+        sound = torchaudio.load(path, out = None, normalization = True)
+        #load returns a tensor with the sound data and the sampling frequency (44.1kHz for UrbanSound8K)
+        soundData = self.mixer(sound[0])
+        print(soundData.shape)
+        print(soundData.numel())
+        #downsample the audio to ~8kHz
 
+        tempData = torch.zeros([1, 3000000]) #tempData accounts for audio clips that are too short
+        if soundData.numel() < 3000000:
+            tempData[:soundData.numel()] = soundData[:]
+        else:
+            tempData = soundData
 
-def model(x, w, b):
-    return w * x + b
+        soundData = tempData
+        # soundFormatted = torch.zeros([32000, 1])
+        # soundFormatted[:32000] = soundData[::5] #take every fifth sample of soundData
+        # soundFormatted = soundFormatted.permute(1, 0)
+        return soundData
 
-
-def loss_fn(x_p, x_c):
-    squared_diffs = (x_p - x_c)**2
-    return squared_diffs.mean()
-
-
-params = torch.tensor([1.0, 1.0], requires_grad=True)
-
-nepochs = 500
-learning_rate = 1e-1
-
-optimizer = optim.Adam([params], lr=learning_rate)
-
-for epoch in range(nepochs):
-    # forward
-    x_p = model(x_u, *params)
-    loss = loss_fn(x_p, x_c)
-
-    print('Epoch %d, Loss %f' % (epoch, float(loss)))
-
-    # backward
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-
-x_p = model(x_u, *params)
-print(params)
+a = PreprocessData(path)
+b = a[0]
+# test_set = UrbanSoundDataset(csv_path, file_path)
+# a = train_set[2]
