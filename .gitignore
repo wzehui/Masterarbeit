@@ -125,3 +125,6 @@ dmypy.json
 # MacOS
 .idea/
 .DS_Store
+
+# Linux
+Daten/

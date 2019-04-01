@@ -23,8 +23,10 @@ def fParseConfig(sFile):
 
 
 # detect device type
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # print(device)
+if device == 'cuda':
+    print(torch.cuda.get_device_name(0))
 
 # load parameter file
 cfg = fParseConfig('param.yml')

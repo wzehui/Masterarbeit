@@ -1,6 +1,6 @@
 # Dataset
-CsvPath : '/Users/wzehui/Documents/MA/Daten/index/index.csv'
-FilePath : '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/'
+CsvPath : '/home/wzehui/Masterarbeit/Daten/index/index.csv'
+FilePath : '/home/wzehui/Masterarbeit/Daten/quellcode/'
 TrainRate : 0.9
 TestRate : 0.1
 
