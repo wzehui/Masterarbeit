@@ -30,7 +30,7 @@ class PreprocessData(object):
                 row_element = row_element.split(";")
                 self.file_names.append(row_element[0])
                 self.folder_names.append(row_element[1])
-                self.labels.append(row_element[2])
+                self.labels.append(int(row_element[2]))
         else:
             for i in range(int((1-rate) * len(csvData)), len(csvData)):
                 row_element = csvData.iloc[i, 0]
@@ -46,11 +46,11 @@ class PreprocessData(object):
     def __getitem__(self, index):
         # format the file path and load the file
         path = self.file_path + str(self.folder_names[index]) + os.sep + self.file_names[index] + "_m" + ".wav"
-        sound = torchaudio.load(path, out = None, normalization = True)
+        sound = torchaudio.load(path, out=None, normalization=True)
         # load returns a tensor with the sound data and the sampling frequency
         soundData = self.mixer(sound[0])
 
-        tempData = torch.zeros([1, 120000]) # tempData accounts for audio clips that are too short
+        tempData = torch.zeros([1, 120000])  # tempData accounts for audio clips that are too short
         if soundData.numel() < 120000:
             tempData[0, :soundData.numel()] = soundData[0, :]
         else:
