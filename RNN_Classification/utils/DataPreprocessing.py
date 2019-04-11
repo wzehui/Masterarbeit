@@ -37,7 +37,7 @@ class PreprocessData(object):
                 row_element = row_element.split(";")
                 self.file_names.append(row_element[0])
                 self.folder_names.append(row_element[1])
-                self.labels.append(row_element[2])
+                self.labels.append(int(row_element[2]))
 
         self.file_path = file_path
         self.mixer = torchaudio.transforms.DownmixMono()  # uses two channels, this will convert them to one
