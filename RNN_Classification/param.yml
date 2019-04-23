@@ -1,8 +1,13 @@
 # Dataset
-CsvPath : '/home/wzehui/Masterarbeit/Daten/index/index.csv'
-FilePath : '/home/wzehui/Masterarbeit/Daten/quellcode/'
-TrainRate : 0.9
-TestRate : 0.1
+IndexPath : '/Users/wzehui/Documents/MA/Daten/index/index.csv'
+FilePath : '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/'
+FeaturePath : '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/feature.csv'
+TrainSplitRate : 0.9
+TestSplitRate : 0.1
+FeatureExtraction : False
+FeatureSelection : [5, 7, 8] # range from 3-17, detail definitions seen FeaturePreprocessing.py
 
 # Training
 BatchSize : 128
+lr : 0.01
+epoch : 10
