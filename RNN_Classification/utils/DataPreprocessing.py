@@ -1,5 +1,5 @@
 """
-Load audio files into dataset for training or testing
+Load raw audio files into dataset for training or testing
 ------------------------------------------------------------------
 Copyright: 2019 Wang,Zehui (wzehui@hotmail.com)
 @author: Wang,Zehui
@@ -11,11 +11,12 @@ import pandas as pd
 import os
 
 
+"""
+TODO: change label !!!
+"""
+
+
 class PreprocessData(object):
-    # Argument List
-    #  path to the UrbanSound8K csv file
-    #  path to the UrbanSound8K audio files
-    #  list of folders to use in the dataset
 
     def __init__(self, csv_path, file_path, rate):
         csvData = pd.read_csv(csv_path)
@@ -25,7 +26,7 @@ class PreprocessData(object):
         self.folder_names = []
         # loop through the csv entries and only add entries from folders in the folder list
         if rate >= 0.5:
-            for i in range(0,int(rate * len(csvData))):
+            for i in range(0, int(rate * len(csvData))):
                 row_element = csvData.iloc[i, 0]
                 row_element = row_element.split(";")
                 self.file_names.append(row_element[0])

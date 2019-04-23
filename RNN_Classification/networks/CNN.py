@@ -25,7 +25,7 @@ class Net(nn.Module):
         self.bn4 = nn.BatchNorm1d(512)
         self.pool4 = nn.MaxPool1d(4)
         self.avgPool = nn.AvgPool1d(30 * 3) #input should be 512x30 so this outputs a 512x1
-        self.fc1 = nn.Linear(512, 10)
+        self.fc1 = nn.Linear(512, 2)
 
     def forward(self, x):
         x = self.conv1(x)

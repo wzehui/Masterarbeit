@@ -14,6 +14,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 from utils.DataPreprocessing import PreprocessData
+from utils.FeaturePreprocessing import PreprocessFeature
 from networks.CNN import Net
 
 
@@ -91,10 +92,16 @@ if device.type == 'cuda':
 # load parameter file
 cfg = fParseConfig('param.yml')
 
-train_set = PreprocessData(cfg['CsvPath'], cfg['FilePath'], cfg['TrainRate'])
-test_set = PreprocessData(cfg['CsvPath'], cfg['FilePath'], cfg['TestRate'])
+if cfg['FeatureExtraction']:
+    train_set = PreprocessFeature(cfg['IndexPath'], cfg['FeaturePath'], cfg['TrainSplitRate'], cfg['FeatureSelection'])
+    test_set = PreprocessFeature(cfg['IndexPath'], cfg['FeaturePath'], cfg['TestSplitRate'], cfg['FeatureSelection'])
+
+else:
+    train_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TrainSplitRate'])
+    test_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TestSplitRate'])
+
 print("Train set size: " + str(len(train_set)))
-# a = train_set[2]
+a = train_set[0]
 print("Test set size: " + str(len(test_set)))
 
 kwargs = {'num_workers': 2, 'pin_memory': True} if device == 'cuda' else {}  # needed for using datasets on gpu
@@ -102,7 +109,7 @@ kwargs = {'num_workers': 2, 'pin_memory': True} if device == 'cuda' else {}  # n
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
 
-#load network structure
+# load network structure
 model = Net()
 model.to(device)
 print(model)
