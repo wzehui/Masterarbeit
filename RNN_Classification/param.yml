@@ -8,6 +8,8 @@ FeatureExtraction : False
 FeatureSelection : [5, 7, 8] # range from 3-17, detail definitions seen FeaturePreprocessing.py
 
 # Training
-BatchSize : 128
+lTrain : True
+BatchSize : 3
 lr : 0.01
 epoch : 10
+BestModelPath : '/Users/wzehui/Documents/MA/Model/bestModel'
