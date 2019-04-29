@@ -2,14 +2,14 @@
 IndexPath : '/Users/wzehui/Documents/MA/Daten/index/index.csv'
 FilePath : '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/'
 FeaturePath : '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/feature.csv'
-TrainSplitRate : [0, 0.9]
+TrainSplitRate : [0, 0.01]
 TestSplitRate : [0.9, 0.95]
 ValSplitRate : [0.95, 1] # how many total data is regarded as validation data
 FeatureExtraction : False
 FeatureSelection : [5, 7, 8] # range from 3-17, detail definitions seen FeaturePreprocessing.py
 
 # Training
-lTrain : True
+lTrain : False
 BatchSize : 8
 lr : 0.0001
 epoch : 10

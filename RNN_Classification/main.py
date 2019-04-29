@@ -38,6 +38,8 @@ def fParseConfig(sFile):
 
 def train(model, epoch):
     # tells layers like dropout, batchnorm etc. that you are training the model
+
+    # training phase
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         #
@@ -48,9 +50,9 @@ def train(model, epoch):
         target = target.to(device)
 
         # set requires_grad to True for training
-        train_data = data.requires_grad_()
+        data = data.requires_grad_()
         # 前向传播
-        output = model(train_data)
+        output = model(data)
         output = output.permute(1, 0, 2)  # original output dimensions are batchSizex1x2
 
         # choose a larger log-probability (log-softmax)
@@ -65,13 +67,10 @@ def train(model, epoch):
         optimizer.step()
 
         if batch_idx % log_interval == 0:  # print training stats
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                       100. * batch_idx / len(train_loader), loss))
+            print('\nTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(data), len(train_loader.dataset), 100. * batch_idx / len(train_loader), loss))
 
-    '''
-    validation phase
-    '''
+    # validation phase
     model.eval()
     correct = 0
     for data, target in val_loader:
@@ -80,8 +79,9 @@ def train(model, epoch):
         output = output.permute(1, 0, 2)
         pred = output.max(2)[1]  # get the index of the max log-probability
         correct += pred.eq(target).cpu().sum().item()
-        accuracy = correct / output.size()[1]  # correct / batchsize
-        print('\nValidation set: Accuracy: {:.3f}'.format(accuracy))
+
+    accuracy = correct / len(test_loader.dataset)
+    print('\nValidation set Accuracy: {:.3f}'.format(accuracy))
 
     return accuracy, model.state_dict()
 
@@ -95,7 +95,7 @@ def train(model, epoch):
 #
 
 
-def test(model, epoch):
+def test(model):
     model.eval()
     correct = 0
     for data, target in test_loader:
@@ -105,14 +105,12 @@ def test(model, epoch):
         output = output.permute(1, 0, 2)
         pred = output.max(2)[1]  # get the index of the max log-probability
         correct += pred.eq(target).cpu().sum().item()
-    print('\nTest set: Accuracy: {}/{} ({:.0f}%)\n'.format(
-        correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
+    print('\nTest set Accuracy: {:.0f}%'.format(100. * correct / len(test_loader.dataset)))
 
 
 # detect device type
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Device: " + device.type)
+print("\nDevice: " + device.type)
 if device.type == 'cuda':
     print(torch.cuda.get_device_name(0))
 
@@ -128,9 +126,9 @@ else:
     val_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['ValSplitRate'])
     test_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TestSplitRate'])
 
-print("Train set size: " + str(len(train_set)))
-print("Validation set size: " + str(len(val_set)))
-print("Test set size: " + str(len(test_set)))
+print("\nTrain set size: " + str(len(train_set)))
+print("\nValidation set size: " + str(len(val_set)))
+print("\nTest set size: " + str(len(test_set)))
 
 # a = train_set[0]
 
@@ -143,6 +141,14 @@ test_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'],
 # load network structure
 model = Net()
 model.to(device)
+
+try:
+    model.load_state_dict(torch.load(cfg['BestModelPath']))
+    model.to(device)
+    print("\nLoad Best Model.")
+except(FileNotFoundError):
+    pass
+
 # print(model)
 
 # We will use the same optimization technique used in the paper, an Adam
@@ -153,33 +159,27 @@ optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=0.0001)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)
 
 # Print model's state_dict
-print("Model's state_dict:")
+print("\nModel's state_dict:")
 for param_tensor in model.state_dict():
     print(param_tensor, "\t", model.state_dict()[param_tensor].size())
 
 # Print optimizer's state_dict
-print("Optimizer's state_dict:")
+print("\nOptimizer's state_dict:")
 for var_name in optimizer.state_dict():
     print(var_name, "\t", optimizer.state_dict()[var_name])
 
 log_interval = 1
-for epoch in range(1, 11):
-    accuracy_b = 0
+accuracy_b = 0
 
-    # if epoch == 31:
-    #     print("First round of training complete. Setting learn rate to 0.001.")
-    # scheduler.step()
-
-    try:
-        model.load_state_dict(torch.load(cfg['BestModelPath']))
-    except(FileNotFoundError):
-        pass
-
-    if cfg['lTrain']:
+if cfg['lTrain']:
+    for epoch in range(1, 11):
+        # if epoch == 31:
+        #     print("First round of training complete. Setting learn rate to 0.001.")
+        # scheduler.step()
         accuracy_cur, model_state = train(model, epoch)
         if accuracy_cur > accuracy_b:
             torch.save(model_state, cfg['BestModelPath'])
+            print("\nBest Model has been updated.")
             accuracy_b = accuracy_cur
-
-    else:
-        test(model, epoch)
+else:
+    test(model)
