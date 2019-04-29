@@ -94,6 +94,7 @@ def train(model, epoch):
 # training so this step is crucial for getting correct results.
 #
 
+
 def test(model, epoch):
     model.eval()
     correct = 0
@@ -128,16 +129,16 @@ else:
     test_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TestSplitRate'])
 
 print("Train set size: " + str(len(train_set)))
-# a = train_set[0]
-print("Test set size: " + str(len(test_set)))
 print("Validation set size: " + str(len(val_set)))
+print("Test set size: " + str(len(test_set)))
 
+# a = train_set[0]
 
 kwargs = {'num_workers': 2, 'pin_memory': True} if device == 'cuda' else {}  # needed for using datasets on gpu
 
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
-test_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
 val_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
+test_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
 
 # load network structure
 model = Net()
@@ -173,16 +174,12 @@ for epoch in range(1, 11):
         model.load_state_dict(torch.load(cfg['BestModelPath']))
     except(FileNotFoundError):
         pass
-    # model.to(device)
 
     if cfg['lTrain']:
-        train(model, epoch)
         accuracy_cur, model_state = train(model, epoch)
+        if accuracy_cur > accuracy_b:
+            torch.save(model_state, cfg['BestModelPath'])
+            accuracy_b = accuracy_cur
 
     else:
         test(model, epoch)
-
-    if accuracy_cur > accuracy_b:
-        torch.save(model_state, cfg['BestModelPath'])
-        accuracy_b = accuracy_cur
-
