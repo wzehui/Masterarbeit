@@ -170,16 +170,21 @@ for var_name in optimizer.state_dict():
 
 log_interval = 1
 accuracy_b = 0
+n = 0  # validation accuracy doesn't improve
 
 if cfg['lTrain']:
     for epoch in range(1, 11):
-        # if epoch == 31:
-        #     print("First round of training complete. Setting learn rate to 0.001.")
-        # scheduler.step()
         accuracy_cur, model_state = train(model, epoch)
         if accuracy_cur > accuracy_b:
             torch.save(model_state, cfg['BestModelPath'])
             print("\nBest Model has been updated.")
             accuracy_b = accuracy_cur
+        else:
+            n += 1
+
+        if n == 10:
+            print("reduce learn rate to 10%")
+            scheduler.step()
+
 else:
     test(model)

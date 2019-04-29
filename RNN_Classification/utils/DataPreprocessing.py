@@ -1,6 +1,6 @@
 """
-Load raw audio files into dataset for training or testing
-------------------------------------------------------------------
+Load raw audio files in time domain into dataset for training or testing
+------------------------------------------------------------------------
 Copyright: 2019 Wang,Zehui (wzehui@hotmail.com)
 @author: Wang,Zehui
 """
