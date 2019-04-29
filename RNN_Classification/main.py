@@ -12,6 +12,7 @@ import yaml
 import torch
 import torch.optim as optim
 import torch.nn.functional as F
+from torch.utils.data.dataset import random_split
 
 from utils.DataPreprocessing import PreprocessData
 from utils.FeaturePreprocessing import PreprocessFeature
@@ -24,6 +25,7 @@ def fParseConfig(sFile):
         cfg = yaml.safe_load(ymlfile)
 
     return cfg
+
 
 ######################################################################
 # Training and Testing the Network
@@ -42,25 +44,18 @@ def train(model, epoch):
         correct = 0
         # 将求解器中的参数置零
         optimizer.zero_grad()
-        #
-        # accuracy_b = 0
         data = data.to(device)
         target = target.to(device)
+
         # set requires_grad to True for training
-        data = data.requires_grad_()
+        train_data = data.requires_grad_()
         # 前向传播
-        output = model(data)
+        output = model(train_data)
         output = output.permute(1, 0, 2)  # original output dimensions are batchSizex1x2
 
         # choose a larger log-probability (log-softmax)
         # predict = torch.ge(output[0][0:, 1], output[0][0:, 0], out=None)
         # correct = (predict.long() == target).float().sum()
-
-        # better method
-        pred = output.max(2)[1]  # get the index of the max log-probability
-        correct += pred.eq(target).cpu().sum().item()
-
-        accuracy_cur = correct / output.size()[1]   # correct / batchsize
 
         # 计算损失  The negative log likelihood loss：负对数似然损失 nll_loss
         loss = F.nll_loss(output[0], target)  # the loss functions expects a batchSizex2 input
@@ -72,10 +67,23 @@ def train(model, epoch):
         if batch_idx % log_interval == 0:  # print training stats
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss))
-            print("Accuracy: {:.3f}".format(accuracy_cur))
+                       100. * batch_idx / len(train_loader), loss))
 
-    torch.save(model.state_dict(), '/Users/wzehui/Documents/MA/Model/bestModel')
+    '''
+    validation phase
+    '''
+    model.eval()
+    correct = 0
+    for data, target in val_loader:
+        data = data.requires_grad_()
+        output = model(data)
+        output = output.permute(1, 0, 2)
+        pred = output.max(2)[1]  # get the index of the max log-probability
+        correct += pred.eq(target).cpu().sum().item()
+        accuracy = correct / output.size()[1]  # correct / batchsize
+        print('\nValidation set: Accuracy: {:.3f}'.format(accuracy))
+
+    return accuracy, model.state_dict()
 
 ######################################################################
 # Now that we have a training function, we need to make one for testing
@@ -107,7 +115,6 @@ print("Device: " + device.type)
 if device.type == 'cuda':
     print(torch.cuda.get_device_name(0))
 
-
 # load parameter file
 cfg = fParseConfig('param.yml')
 
@@ -117,16 +124,20 @@ if cfg['FeatureExtraction']:
 
 else:
     train_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TrainSplitRate'])
+    val_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['ValSplitRate'])
     test_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TestSplitRate'])
 
 print("Train set size: " + str(len(train_set)))
 # a = train_set[0]
 print("Test set size: " + str(len(test_set)))
+print("Validation set size: " + str(len(val_set)))
+
 
 kwargs = {'num_workers': 2, 'pin_memory': True} if device == 'cuda' else {}  # needed for using datasets on gpu
 
 train_loader = torch.utils.data.DataLoader(train_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
+val_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
 
 # load network structure
 model = Net()
@@ -152,14 +163,26 @@ for var_name in optimizer.state_dict():
 
 log_interval = 1
 for epoch in range(1, 11):
-    if epoch == 31:
-        print("First round of training complete. Setting learn rate to 0.001.")
-    scheduler.step()
-    try:
-        model = torch.load(cfg['BestModelPath'])
-    except(FileNotFoundError):
-        model = Net()
+    accuracy_b = 0
 
-    model.to(device)
-    train(model, epoch)
-    # test(model, epoch)
+    # if epoch == 31:
+    #     print("First round of training complete. Setting learn rate to 0.001.")
+    # scheduler.step()
+
+    try:
+        model.load_state_dict(torch.load(cfg['BestModelPath']))
+    except(FileNotFoundError):
+        pass
+    # model.to(device)
+
+    if cfg['lTrain']:
+        train(model, epoch)
+        accuracy_cur, model_state = train(model, epoch)
+
+    else:
+        test(model, epoch)
+
+    if accuracy_cur > accuracy_b:
+        torch.save(model_state, cfg['BestModelPath'])
+        accuracy_b = accuracy_cur
+
