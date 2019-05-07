@@ -10,6 +10,8 @@ import torchaudio
 import pandas as pd
 import os
 
+from utils.MelFrequency import mel_freq
+
 
 class PreprocessData(object):
 
@@ -37,14 +39,15 @@ class PreprocessData(object):
         sound = torchaudio.load(path, out=None, normalization=True)
         # load returns a tensor with the sound data and the sampling frequency
         sound_data = self.mixer(sound[0])
-
         temp_data = torch.zeros([1, 120000])  # tempData accounts for audio clips that are too short
         if sound_data.numel() < 120000:
             temp_data[0, :sound_data.numel()] = sound_data[0, :]
         else:
             temp_data[0, :] = sound_data[0, :120000]
-
         sound_data = temp_data
+
+        sound_data = mel_freq(sound_data, sound[1])
+        sound_data = sound_data.unsqueeze(0)  # expand dimension from [*,nmel,nframe] to [*,1,nmel,nframe]
         return sound_data, self.labels[index]
 
     def __len__(self):

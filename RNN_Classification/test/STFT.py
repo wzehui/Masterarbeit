@@ -1,4 +1,5 @@
 import numpy as np
+import torchaudio
 
 
 def calc_stft(signal, sample_rate=16000, frame_size=0.025, frame_stride=0.01, winfunc=np.hamming, NFFT=512):
@@ -41,7 +42,10 @@ if __name__ == '__main__':
     sample_rate, signal = scipy.io.wavfile.read(
         "/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/B1-Amfortas/B1-m307-Amfo-A-c1-1_m.wav")
     # Get speech data in the first 2 seconds
-    signal = signal[0:int(2. * sample_rate)]
+    # signal = signal[0:int(2. * sample_rate)]
+    mixer = torchaudio.transforms.DownmixMono()
+    signal = mixer(signal[0])
+    # signal = signal.
 
     # Calculate the short time fourier transform
     pow_spec = calc_stft(signal, sample_rate)

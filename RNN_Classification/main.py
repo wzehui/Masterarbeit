@@ -53,14 +53,14 @@ def train(model, epoch):
         data = data.requires_grad_()
         # 前向传播
         output = model(data)
-        output = output.permute(1, 0, 2)  # original output dimensions are batchSizex1x2
+        output = output.permute(1, 2, 0, 3)  # original output dimensions are batchSizex1x2
 
         # choose a larger log-probability (log-softmax)
         # predict = torch.ge(output[0][0:, 1], output[0][0:, 0], out=None)
         # correct = (predict.long() == target).float().sum()
 
         # 计算损失  The negative log likelihood loss：负对数似然损失 nll_loss
-        loss = F.nll_loss(output[0], target)  # the loss functions expects a batchSizex2 input
+        loss = F.nll_loss(output[0, 0], target)  # the loss functions expects a batchSizex2 input
         # 损失反传
         loss.backward()
         # 优化求解
@@ -76,8 +76,8 @@ def train(model, epoch):
     for data, target in val_loader:
         data = data.requires_grad_()
         output = model(data)
-        output = output.permute(1, 0, 2)
-        pred = output.max(2)[1]  # get the index of the max log-probability
+        output = output.permute(1, 2, 0, 3)
+        pred = output.max(3)[1]  # get the index of the max log-probability
         correct += pred.eq(target).cpu().sum().item()
 
     accuracy = correct / len(test_loader.dataset)
@@ -102,8 +102,8 @@ def test(model):
         data = data.to(device)
         target = target.to(device)
         output = model(data)
-        output = output.permute(1, 0, 2)
-        pred = output.max(2)[1]  # get the index of the max log-probability
+        output = output.permute(1, 2, 0, 3)
+        pred = output.max(3)[1]  # get the index of the max log-probability
         correct += pred.eq(target).cpu().sum().item()
     print('\nTest set Accuracy: {:.0f}%'.format(100. * correct / len(test_loader.dataset)))
 
@@ -123,6 +123,7 @@ if cfg['FeatureExtraction']:
 
 else:
     train_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TrainSplitRate'])
+    # a = train_set[0]
     val_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['ValSplitRate'])
     test_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TestSplitRate'])
 

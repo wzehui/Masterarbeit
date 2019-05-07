@@ -1,40 +1,36 @@
-import re
-import os
-import pandas as pd
-import torch
-import torchaudio
-import pandas as pd
-import os
+import wavio
+import numpy as np
+from scipy import signal
+import matplotlib.pyplot as plt
+import librosa
 
-path = '/Users/wzehui/Documents/MA/Daten/quellcode/13230.mp3'
 
-class PreprocessData(object):
-    def __init__(self, path):
-        self.path = path
-        self.mixer = torchaudio.transforms.DownmixMono() #UrbanSound8K uses two channels, this will convert them to one
+path = '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/S1-Uebung/S1-w035-Uebu-A-a1-1_m.wav'
+epsilon = np.finfo(np.float).eps
 
-    def __getitem__(self, index):
-        #format the file path and load the file
-        sound = torchaudio.load(path, out = None, normalization = True)
-        #load returns a tensor with the sound data and the sampling frequency (44.1kHz for UrbanSound8K)
-        soundData = self.mixer(sound[0])
-        print(soundData.shape)
-        print(soundData.numel())
-        #downsample the audio to ~8kHz
+wav_struct = wavio.read(path)
 
-        tempData = torch.zeros([1, 3000000]) #tempData accounts for audio clips that are too short
-        if soundData.numel() < 3000000:
-            tempData[:soundData.numel()] = soundData[:]
-        else:
-            tempData = soundData
+frame_size =0.025; frame_stride=0.01
+frame_length = frame_size * wav_struct.rate
+frame_length = int(round(frame_length))
 
-        soundData = tempData
-        # soundFormatted = torch.zeros([32000, 1])
-        # soundFormatted[:32000] = soundData[::5] #take every fifth sample of soundData
-        # soundFormatted = soundFormatted.permute(1, 0)
-        return soundData
+frame_step = frame_stride * wav_struct.rate
+frame_step = int(round(frame_step))
 
-a = PreprocessData(path)
-b = a[0]
-# test_set = UrbanSoundDataset(csv_path, file_path)
-# a = train_set[2]
+wav = wav_struct.data.astype(float)/np.power(2, wav_struct.sampwidth*8-1)
+wav = (wav[:, 0] + wav[:, 1]) / 2
+
+# z = np.zeros(30000-wav_struct.data.shape[0])
+# wav = np.append(wav, z)
+
+[f, t, X] = signal.spectral.spectrogram(wav, wav_struct.rate, np.hamming(frame_length), nperseg=frame_length, noverlap=frame_step, detrend=False, return_onesided=True, mode='magnitude')
+
+spectrum, fs, ts, fig = plt.specgram(wav+epsilon, NFFT = frame_length,Fs =wav_struct.rate,window=np.hanning(M=frame_length),noverlap=frame_step,mode='psd',scale_by_freq=True,sides='default',scale='dB',xextent=None)
+# plt.plot(f,t,X)
+# plt.imshow(X)
+plt.show()
+
+melX = librosa.feature.melspectrogram(t, sr=wav_struct.rate, n_mels=64, S=X, n_fft=frame_length, hop_length=frame_step, power=2.0)
+# melW = librosa.filters.mel(22050, n_fft=551,n_mels=64)
+# melW /= np.max(melW,axis=-1)[:,None]
+# melX = np.dot(X, melW.T)
