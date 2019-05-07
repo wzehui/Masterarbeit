@@ -43,7 +43,6 @@ def train(model, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         #
-        correct = 0
         # 将求解器中的参数置零
         optimizer.zero_grad()
         data = data.to(device)
@@ -54,10 +53,6 @@ def train(model, epoch):
         # 前向传播
         output = model(data)
         output = output.permute(1, 2, 0, 3)  # original output dimensions are batchSizex1x2
-
-        # choose a larger log-probability (log-softmax)
-        # predict = torch.ge(output[0][0:, 1], output[0][0:, 0], out=None)
-        # correct = (predict.long() == target).float().sum()
 
         # 计算损失  The negative log likelihood loss：负对数似然损失 nll_loss
         loss = F.nll_loss(output[0, 0], target)  # the loss functions expects a batchSizex2 input
@@ -74,7 +69,9 @@ def train(model, epoch):
     model.eval()
     correct = 0
     for data, target in val_loader:
-        data = data.requires_grad_()
+        data = data.to(device)
+        target = target.to(device)
+        # data = data.requires_grad_()
         output = model(data)
         output = output.permute(1, 2, 0, 3)
         pred = output.max(3)[1]  # get the index of the max log-probability
