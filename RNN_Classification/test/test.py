@@ -1,36 +1,44 @@
-import wavio
-import numpy as np
-from scipy import signal
-import matplotlib.pyplot as plt
-import librosa
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 
-path = '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/S1-Uebung/S1-w035-Uebu-A-a1-1_m.wav'
-epsilon = np.finfo(np.float).eps
+x = torch.ones(8, 1, 64, 546)
 
-wav_struct = wavio.read(path)
+conv1 = nn.Conv2d(1, 256, [9, 9], 1)
+pool1 = nn.MaxPool2d([3,1])
+conv2 = nn.Conv2d(256, 256, [4, 3], 1)
 
-frame_size =0.025; frame_stride=0.01
-frame_length = frame_size * wav_struct.rate
-frame_length = int(round(frame_length))
+linear1 = nn.Linear(256, 1)
 
-frame_step = frame_stride * wav_struct.rate
-frame_step = int(round(frame_step))
+lstm=nn.LSTM(input_size=15, hidden_size=832, num_layers=2, batch_first=True)
 
-wav = wav_struct.data.astype(float)/np.power(2, wav_struct.sampwidth*8-1)
-wav = (wav[:, 0] + wav[:, 1]) / 2
+linear2 = nn.Linear(832, 2)
 
-# z = np.zeros(30000-wav_struct.data.shape[0])
-# wav = np.append(wav, z)
+linear3 = nn.Linear(536, 1)
 
-[f, t, X] = signal.spectral.spectrogram(wav, wav_struct.rate, np.hamming(frame_length), nperseg=frame_length, noverlap=frame_step, detrend=False, return_onesided=True, mode='magnitude')
 
-spectrum, fs, ts, fig = plt.specgram(wav+epsilon, NFFT = frame_length,Fs =wav_struct.rate,window=np.hanning(M=frame_length),noverlap=frame_step,mode='psd',scale_by_freq=True,sides='default',scale='dB',xextent=None)
-# plt.plot(f,t,X)
-# plt.imshow(X)
-plt.show()
+x = conv1(x)
+x = pool1(x)
+x = conv2(x)
 
-melX = librosa.feature.melspectrogram(t, sr=wav_struct.rate, n_mels=64, S=X, n_fft=frame_length, hop_length=frame_step, power=2.0)
-# melW = librosa.filters.mel(22050, n_fft=551,n_mels=64)
-# melW /= np.max(melW,axis=-1)[:,None]
-# melX = np.dot(X, melW.T)
+x = x.permute(0, 2, 3, 1)
+x = linear1(x)
+x = x.squeeze()
+
+x = x.permute(0, 2, 1)
+x = lstm(x)
+
+x = linear2(x[0])
+
+x = F.log_softmax(x, dim=2)
+
+x = x.permute(0, 2, 1)
+
+x = linear3(x)
+
+x = x.unsqueeze(1)
+
+x = x.permute(0, 1, 3, 2)
+# print(lstm_seq.weight_hh_l0.size())
+# print(lstm_seq.weight_ih_l0.size())

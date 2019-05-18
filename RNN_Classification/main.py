@@ -14,9 +14,15 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data.dataset import random_split
 
-from utils.DataPreprocessing import PreprocessData
+from utils.DataPreprocessing import *
 from utils.FeaturePreprocessing import PreprocessFeature
 from networks.CNN import Net
+from networks.RNN import RNN
+
+from utils.fBankPlot import mel_plot
+
+import visdom
+vis = visdom.Visdom(env=u'train')  # 指定Environment：train
 
 
 def fParseConfig(sFile):
@@ -55,7 +61,8 @@ def train(model, epoch):
         output = output.permute(1, 2, 0, 3)  # original output dimensions are batchSizex1x2
 
         # 计算损失  The negative log likelihood loss：负对数似然损失 nll_loss
-        loss = F.nll_loss(output[0, 0], target)  # the loss functions expects a batchSizex2 input
+        # loss = F.nll_loss(output[0, 0], target)  # the loss functions expects a batchSizex2 input
+        loss = F.cross_entropy(output[0, 0], target)
         # 损失反传
         loss.backward()
         # 优化求解
@@ -64,6 +71,11 @@ def train(model, epoch):
         if batch_idx % log_interval == 0:  # print training stats
             print('\nTrain Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset), 100. * batch_idx / len(train_loader), loss))
+
+        # visualization
+        vis.line(X=torch.FloatTensor([batch_idx]), Y=torch.FloatTensor([loss]), win='train', update='append' if batch_idx > 1 else None,
+             opts={'title': 'train loss'})
+
 
     # validation phase
     model.eval()
@@ -113,16 +125,18 @@ if device.type == 'cuda':
 
 # load parameter file
 cfg = fParseConfig('param.yml')
+training_index, test_index, val_index = \
+    process_index(cfg['IndexPath'], cfg['TestSplitRate'], cfg['ValSplitRate'], cfg['DataRepeat'])
 
 if cfg['FeatureExtraction']:
     train_set = PreprocessFeature(cfg['IndexPath'], cfg['FeaturePath'], cfg['TrainSplitRate'], cfg['FeatureSelection'])
     test_set = PreprocessFeature(cfg['IndexPath'], cfg['FeaturePath'], cfg['TestSplitRate'], cfg['FeatureSelection'])
 
 else:
-    train_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TrainSplitRate'])
-    # a = train_set[0]
-    val_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['ValSplitRate'])
-    test_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], cfg['TestSplitRate'])
+    train_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], training_index)
+    a = train_set[0]
+    val_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], val_index)
+    test_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], test_index)
 
 print("\nTrain set size: " + str(len(train_set)))
 print("\nValidation set size: " + str(len(val_set)))
@@ -132,12 +146,13 @@ print("\nTest set size: " + str(len(test_set)))
 
 kwargs = {'num_workers': 2, 'pin_memory': True} if device == 'cuda' else {}  # needed for using datasets on gpu
 
-train_loader = torch.utils.data.DataLoader(train_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
+train_loader = torch.utils.data.DataLoader(train_set, batch_size=cfg['BatchSize'], shuffle=False, **kwargs)
 val_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
 test_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'], shuffle=True, **kwargs)
 
 # load network structure
-model = Net()
+# model = Net()
+model = RNN()
 model.to(device)
 
 try:
@@ -153,7 +168,9 @@ except(FileNotFoundError):
 # optimizer with weight decay set to 0.0001. At first, we will train with
 # a learning rate of 0.01, but we will use a ``scheduler`` to decrease it
 # to 0.001 during training.
-optimizer = optim.Adam(model.parameters(), lr=0.01, weight_decay=0.0001)
+
+# optimizer = optim.Adam(model.parameters(), lr=cfg['lr'], weight_decay=0.0001)
+optimizer = optim.SGD(model.parameters(), lr=cfg['lr'], momentum=0.9)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.1)
 
 # Print model's state_dict
@@ -171,7 +188,7 @@ accuracy_b = 0
 n = 0  # validation accuracy doesn't improve
 
 if cfg['lTrain']:
-    for epoch in range(1, 11):
+    for epoch in range(1, cfg['epoch']):
         accuracy_cur, model_state = train(model, epoch)
         if accuracy_cur > accuracy_b:
             torch.save(model_state, cfg['BestModelPath'])
@@ -186,3 +203,6 @@ if cfg['lTrain']:
 
 else:
     test(model)
+
+# if __name__ == '__main__':
+#     main()

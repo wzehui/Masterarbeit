@@ -27,8 +27,9 @@ def mel_freq(y, fs, frame_size=0.025, frame_stride=0.01, nmel=64):
                      pad_mode='reflect')
     y = np.abs(y) ** 2
     y = librosa.feature.melspectrogram(sr=fs, S=y, n_fft=frame_length, hop_length=frame_step, power=2.0, n_mels=nmel)
-    # y = librosa.power_to_db(y, ref=np.max)
 
+    # # plot
+    # y = librosa.power_to_db(y, ref=np.max)
     # plt.figure(figsize=(10, 4))
     # librosa.display.specshow(y, y_axis='mel', fmax=8000, x_axis='time')
     # plt.colorbar(format='%+2.0f dB')

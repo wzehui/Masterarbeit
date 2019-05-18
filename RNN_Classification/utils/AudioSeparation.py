@@ -43,6 +43,11 @@ for i in range(0, len(csvData)):
                 time_s = temp[1]
 
     # print(time_b, time_s)
+
+    # add surplus
+    time_b = float(time_b) + 1
+    time_s = float(time_s) + 0.1
+
     audio_temp = AudioSegment.from_file(audio_pth)
-    audio_temp = audio_temp[float(time_b):float(time_s)]
+    audio_temp = audio_temp[time_b:time_s]
     audio_temp.export(file_path + str(folder_names) + os.sep + file_names + "_m" + ".wav", format="wav")
