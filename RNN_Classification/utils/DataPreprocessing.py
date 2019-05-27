@@ -61,21 +61,28 @@ class PreprocessData(object):
         sound = torchaudio.load(path, out=None, normalization=True)
         # load returns a tensor with the sound data and the sampling frequency
         sound_data = self.mixer(sound[0])
-        temp_data = torch.zeros([1, 120000])  # tempData accounts for audio clips that are too short
-        if sound_data.numel() < 120000:
-            temp_data[0, :sound_data.numel()] = sound_data[0, :]
-        else:
-            temp_data[0, :] = sound_data[0, :120000]
-        sound_data = temp_data
 
         # Pre-emphasis
         pre_emphasis = 0.97
-        sound_data_e = np.append(sound_data[0, 0].numpy(),
+        sound_data = np.append(sound_data[0, 0].numpy(),
                                  (sound_data[0, 1:] - pre_emphasis * sound_data[0, :-1]).numpy())
-        sound_data_e = torch.from_numpy(sound_data_e)
-        sound_data_e = sound_data_e.unsqueeze(0)
+        sound_data = torch.from_numpy(sound_data)
+        sound_data = sound_data.unsqueeze(0)
 
-        sound_data = mel_freq(sound_data_e, sound[1])
+        # 300 ms Redundacy at beginning
+        temp_data = torch.zeros([1, 6600])
+        temp_data = torch.cat([temp_data, sound_data], 1)
+        sound_data = temp_data
+
+        # Zero-Padding to 4000 ms
+        temp_data = torch.zeros([1, 90000])  # tempData accounts for audio clips that are too short
+        if sound_data.numel() < 90000:
+            temp_data[0, :sound_data.numel()] = sound_data[0, :]
+        else:
+            temp_data[0, :] = sound_data[0, :90000]
+        sound_data = temp_data
+
+        sound_data = mel_freq(sound_data, sound[1])
         sound_data = sound_data.unsqueeze(0)  # expand dimension from [*,nmel,nframe] to [*,1,nmel,nframe]
         return sound_data, self.labels[self.index[index]]
 

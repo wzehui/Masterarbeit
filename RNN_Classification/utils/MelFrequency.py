@@ -12,7 +12,7 @@ import librosa.display
 import torch
 
 
-def mel_freq(y, fs, frame_size=0.025, frame_stride=0.01, nmel=64):
+def mel_freq(y, fs, frame_size=0.025, frame_stride=0.01, nmel=72):
 
     frame_length = frame_size * fs
     frame_length = int(round(frame_length))
@@ -26,7 +26,7 @@ def mel_freq(y, fs, frame_size=0.025, frame_stride=0.01, nmel=64):
     y = librosa.stft(y, n_fft=frame_length, hop_length=frame_step, win_length=None, window='hann', center=True,
                      pad_mode='reflect')
     y = np.abs(y) ** 2
-    y = librosa.feature.melspectrogram(sr=fs, S=y, n_fft=frame_length, hop_length=frame_step, power=2.0, n_mels=nmel)
+    y = librosa.feature.melspectrogram(sr=fs, S=y, n_fft=frame_length, hop_length=frame_step, power=1.0, n_mels=nmel)
 
     # # plot
     # y = librosa.power_to_db(y, ref=np.max)

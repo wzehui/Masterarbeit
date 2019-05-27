@@ -17,7 +17,7 @@ from torch.utils.data.dataset import random_split
 from utils.DataPreprocessing import *
 from utils.FeaturePreprocessing import PreprocessFeature
 from networks.CNN import Net
-from networks.RNN import RNN
+from networks.RNN import CLDNN
 
 from utils.fBankPlot import mel_plot
 
@@ -134,7 +134,7 @@ if cfg['FeatureExtraction']:
 
 else:
     train_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], training_index)
-    a = train_set[0]
+    # a = train_set[0]
     val_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], val_index)
     test_set = PreprocessData(cfg['IndexPath'], cfg['FilePath'], test_index)
 
@@ -152,7 +152,7 @@ test_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'],
 
 # load network structure
 # model = Net()
-model = RNN()
+model = CLDNN()
 model.to(device)
 
 try:

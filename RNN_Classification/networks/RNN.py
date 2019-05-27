@@ -12,9 +12,9 @@ import torch.nn.functional as F
 
 # x = torch.ones(8, 1, 64, 51)
 
-class RNN(nn.Module):
+class CLDNN(nn.Module):
     def __init__(self):
-        super(RNN, self).__init__()
+        super(CLDNN, self).__init__()
 
         self.conv1 = nn.Conv2d(1, 256, [9, 9], 1)
         self.pool1 = nn.MaxPool2d([3, 1])
@@ -22,11 +22,11 @@ class RNN(nn.Module):
 
         self.linear1 = nn.Linear(256, 1)
 
-        self.lstm = nn.LSTM(input_size=15, hidden_size=832, num_layers=2, batch_first=True)
+        self.lstm = nn.LSTM(input_size=18, hidden_size=400, num_layers=2, batch_first=True)
 
-        self.linear2 = nn.Linear(832, 2)
+        self.linear2 = nn.Linear(400, 2)
 
-        self.linear3 = nn.Linear(536, 1)
+        self.linear3 = nn.Linear(400, 1)
 
     def forward(self, x):
         x = self.conv1(x)
