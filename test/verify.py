@@ -58,7 +58,7 @@ def verify(data):
 
     return error_name
 
-training_index, test_index, val_index = process_index(csv_path, 0, 0, 0)
+training_index, val_index, test_index = process_index(csv_path, 0, 0, 0)
 
 
 index = training_index

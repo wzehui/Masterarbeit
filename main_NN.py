@@ -18,13 +18,13 @@ from torch.utils.data.dataset import random_split
 
 from utils.DataPreprocessing import *
 from networks.CNN import Net
-# from networks.RNN import CLDNN
+from networks.RNN import CLDNN
 # from networks.test import Net
 
 from utils.fBankPlot import mel_plot
 
 import visdom
-# vis = visdom.Visdom(env=u'train')  # 指定Environment：train
+vis = visdom.Visdom(env=u'train')  # Environment：train $ python -m visdom.server
 
 
 def fParseConfig(sFile):
@@ -75,10 +75,6 @@ def train(model, epoch):
                 epoch, (batch_idx + 1) * len(data) * (batch_idx + 1 != len(train_loader)) + len(train_loader.dataset) * (batch_idx + 1 == len(train_loader)),
                 len(train_loader.dataset), 100. * (batch_idx + 1) / len(train_loader), loss))
 
-        # visualization
-        # vis.line(X=torch.FloatTensor([batch_idx]), Y=torch.FloatTensor([loss]), win='train', update='append' if batch_idx > 1 else None,
-        #      opts={'title': 'train loss'})
-
     # validation phase
     model.eval()
     tp = 0; tn = 0; fp = 0; fn = 0;
@@ -106,7 +102,7 @@ def train(model, epoch):
 
     print('\nF1 Score of Validation set : {:.3f}'.format(f1))
 
-    return f1, model.state_dict()
+    return f1, model.state_dict(), loss
 
 ######################################################################
 # Now that we have a training function, we need to make one for testing
@@ -200,8 +196,13 @@ test_loader = torch.utils.data.DataLoader(test_set, batch_size=cfg['BatchSize'],
 
 # load network structure
 # model = Net()
-# model = CLDNN()
-model = Net()
+model = CLDNN()
+# model = Net()
+
+param_count = 0
+for param in model.parameters():
+    param_count += param.view(-1).size()[0]
+
 model.to(device)
 
 try:
@@ -238,7 +239,14 @@ n = 0  # validation accuracy doesn't improve
 
 if cfg['lTrain']:
     for epoch in range(1, cfg['epoch']+1):
-        f1_cur, model_state = train(model, epoch)
+        f1_cur, model_state, loss = train(model, epoch)
+
+        # visualization
+        vis.line(X=torch.FloatTensor([epoch]), Y=torch.FloatTensor([f1_cur]), win='F1 Score', update='append' if epoch > 1 else None,
+             opts={'title': 'F1 Score'})
+        vis.line(X=torch.FloatTensor([epoch]), Y=torch.FloatTensor([loss]), win='Loss', update='append' if epoch > 1 else None,
+             opts={'title': 'Loss'})
+
         if f1_cur > f1_b:
             torch.save(model_state, cfg['BestModelPath'])
             print("\nBest Model has been updated.")

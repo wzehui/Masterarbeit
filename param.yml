@@ -1,5 +1,5 @@
 # Dataset
-IndexPath : '/Users/wzehui/Documents/MA/Daten/index/index.csv'
+IndexPath : '/Users/wzehui/Documents/MA/Daten/index/Tenor.csv'
 FilePath : '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/'
 FeaturePath : '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/feature_T.csv'
 DataRepeat : 0 # the Time of repeating the Training data to enlarge the dataset
@@ -14,5 +14,5 @@ DataPath : '/Users/wzehui/Documents/MA/Daten/index/train+test+val_index'
 lTrain : True
 BatchSize : 32
 lr : 0.001
-epoch : 30
+epoch : 100
 BestModelPath : '/Users/wzehui/Documents/MA/Model/bestModel'
