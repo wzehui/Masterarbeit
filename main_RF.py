@@ -40,7 +40,7 @@ for i in range(feature_data.shape[0]):
     feature.append(temp[cfg['FeatureSelection']])
 
 # initialization
-X_train, X_test, y_train, y_test = train_test_split(feature, labels, test_size=0.5, random_state=cfg['RandomState'])
+X_train, X_test, y_train, y_test = train_test_split(feature, labels, test_size=0.2, random_state=cfg['RandomState'])
 
 # # change FeatureSelection to [0]
 # with open('/Users/wzehui/Documents/MA/Model/DataDistribution_T.txt', 'w') as f:
@@ -48,14 +48,13 @@ X_train, X_test, y_train, y_test = train_test_split(feature, labels, test_size=0
 #     f.write('\n')
 #     f.write(str(X_test))
 
-# 'min_samples_leaf': [2, 3],
-# 'min_samples_split': [16],
-# 'n_estimators': [150]
-params = {'max_depth': range(2, 22, 10),
-          'min_samples_split': range(2, 22, 10),
+params = {'max_depth': [12],
+          'min_samples_split': [2],
+          'n_estimators': [200],
+          'min_samples_leaf': [2],
           } # S: 10, 13, 3, 80, 0.174
-CrossValidation = StratifiedKFold(n_splits=10, shuffle=True, random_state=cfg['RandomState'])
-rf = RandomForestClassifier(n_estimators=100, oob_score=True, random_state=cfg['RandomState'])
+CrossValidation = StratifiedKFold(n_splits=5, shuffle=True, random_state=cfg['RandomState'])
+rf = RandomForestClassifier(oob_score=True, random_state=cfg['RandomState'])
 rf_grid = GridSearchCV(estimator=rf, param_grid=params, iid=True, cv=CrossValidation, n_jobs=-1, verbose=4)
 
 # Train
