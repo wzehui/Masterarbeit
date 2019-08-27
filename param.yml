@@ -4,7 +4,6 @@ FilePath : '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/'
 DataRepeat : 0 # the Time of repeating the Training data to enlarge the dataset
 TestSplitRate : 0.1
 ValSplitRate : 0.05 # how many training data is regarded as validation data
-FeatureExtraction : False
 
 # Neural Network
 lSave : True
@@ -16,8 +15,10 @@ epoch : 100
 BestModelPath : '/Users/wzehui/Documents/MA/Model/bestModel'
 
 # Random Forest
-FeaturePath : '/Users/wzehui/Documents/MA/Daten/feature/feature_T.csv'
+FeatureExtraction : False
+FeaturePath : '/Users/wzehui/Documents/MA/Daten/quellcode/feature/feature_Sopran.csv'
+# FeatureSelection : []
 # FeatureSelection : [0] # print data name for reproducible
-FeatureSelection : [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] # range from 3-16, detail definitions seen Feature Preprocessing.py
-RandomState : 55
+FeatureSelection : [4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16] # range from 4-16, detail definitions seen Feature Preprocessing.py
+RandomState : 5
 BestParamPath : '/Users/wzehui/Documents/MA/Model/bestParameter.txt'

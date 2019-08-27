@@ -2,15 +2,15 @@
 Load raw audio files in time domain into dataset for training or testing
 Load extracted feature files into dataset for training or testing
 feature format :
-                |0         |1          |2        |3               |4              |5        |
-                |Name      |Label      |Voice    |Start of formant|Stop of formant|PHE      |
-                ----------------------------------------------------------------------------
-                |6         |7          |8        |9               |10             |11       |
-                |FHE       |Vibratofreq|Extent   |Jitter          |Shimmer        |Strength |
-                ----------------------------------------------------------------------------
-                |12        |13         |14       |15              |16             |         |
-                |Centroid  |Variance   |Skewness |Kurtosis        |Tonklasse      |         |
----------------------------------------------------------------------------------------------
+                |0        |1         |2           |3        |4                |5              |
+                |Name     |Full Path |Label       |Voice    |Start of formant |Stop of formant|
+                -------------------------------------------------------------------------------
+                |6        |7         |8           |9        |10               |11             |
+                |PHE      |FHE       |Vibratofreq |Extent   |Jitter           |Shimmer        |
+                -------------------------------------------------------------------------------
+                |12       |13        |14          |15       |16               |               |
+                |Strength |Centroid  |Variance    |Skewness |Kurtosis         |               |
+-----------------------------------------------------------------------------------------------
 Copyright: 2019 Wang,Zehui (wzehui@hotmail.com)
 @author: Wang,Zehui
 """
@@ -103,6 +103,7 @@ class PreprocessData(object):
 
         sound_data = mel_freq(sound_data, sound[1])
         sound_data = sound_data.unsqueeze(0)  # expand dimension from [*,nmel,nframe] to [*,1,nmel,nframe]
+
         return sound_data, self.labels[self.index[index]]
 
     def __len__(self):

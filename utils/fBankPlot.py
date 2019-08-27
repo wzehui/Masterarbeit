@@ -9,9 +9,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import librosa
 import librosa.display
+from sklearn.decomposition import PCA
 
 
-def mel_plot(path, name, label):
+path = '/Users/wzehui/Documents/MA/Daten/quellcode/sounddb/T2-Tamino/T2-m034-Tami-I-a1-1_m.wav'
+
+def mel_plot(path):
 
     y, fs = librosa.load(path)
 
@@ -25,21 +28,27 @@ def mel_plot(path, name, label):
     frame_step = int(round(frame_step))
 
     y = librosa.stft(y, n_fft=frame_length, hop_length=frame_step, win_length=None, window='hann', center=True, pad_mode='reflect')
-    y = np.abs(y)**2
-    y = librosa.feature.melspectrogram(sr=fs, S=y, n_fft=frame_length, hop_length=frame_step, power=2.0, n_mels=64)
-    # y = librosa.power_to_db(y, ref=np.max)
+    y = np.abs(y) ** 2
+    y = librosa.feature.melspectrogram(S=y, n_mels=72)
+    y = librosa.power_to_db(y)
+    y = librosa.feature.mfcc(S=y, n_mfcc=32, dct_type=2, norm='ortho')
 
-    plt.figure(figsize=(10, 4))
-    librosa.display.specshow(y, y_axis='mel', fmax=8000, x_axis='time')
+    pca = PCA(n_components=1, svd_solver='full')
+    y = pca.fit(y)
+    y = y.mean_
+    # y = pca.fit_transform(y.T)
+    # y = y.T
 
-    plt.colorbar(format='%+2.0f dB')
-    plt.title('Mel spectrogram')
-    plt.tight_layout()
-
-    if label:
-        plt.savefig('/Users/wzehui/Documents/MA/Plot/1/' + str(name))
-    else:
-        plt.savefig('/Users/wzehui/Documents/MA/Plot/0/' + str(name))
-
+    # plt.figure(figsize=(10, 4))
+    # librosa.display.specshow(y, y_axis='mel', x_axis='time')
+    #
+    # plt.colorbar(format='%+2.0f dB')
+    # plt.tight_layout()
+    #
+    # plt.savefig('/Users/wzehui/Documents/MA/Plot/STFT.pdf')
     # plt.show()
 
+    return y
+
+
+y = mel_plot(path)
